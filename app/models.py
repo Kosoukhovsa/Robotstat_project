@@ -194,15 +194,17 @@ class ResearchGroups(db.Model):
 class Reasons(db.Model):
     __tablename__ = 'Reasons'
     id = db.Column(db.Integer(), primary_key=True)
-    description = db.Column(db.String(100), unique=True)
+    description = db.Column(db.String(300), unique=True)
 
 # Диагнозы
+
 class DiagnosesItems(db.Model):
     __tablename__ = 'DiagnosesItems'
     id = db.Column(db.Integer(), primary_key=True)
     description = db.Column(db.String(100), unique=True)
     mkb10 = db.Column(db.String(20), unique=False)
     type = db.Column(db.String(30), unique=False, index = True)
+
 
 # Врачи
 class Doctors(db.Model):
@@ -272,7 +274,7 @@ class IndicatorsGroups(db.Model):
 class Indicators(db.Model):
     __tablename__ = 'Indicators'
     id = db.Column(db.Integer(), primary_key=True)
-    description = db.Column(db.String(100), unique=False)
+    description = db.Column(db.String(300), unique=False)
     is_calculated = db.Column(db.Boolean)
     group = db.Column(db.Integer(), db.ForeignKey('IndicatorsGroups.id'), index = True)
     unit = db.Column(db.String(20), unique=False)
