@@ -7,11 +7,9 @@ class SqlEngine():
     def GetTablesInfo(db):
         c_engine = db.get_engine()
         t_list = c_engine.table_names()
-        print(t_list)
         t_dict = {}
         for t in t_list:
             sql_query = "select count('id') from "+ '"{}"'.format(t)
-            print(sql_query)
         #sql_query = "select count('id') from ""Clinics"""
             rows_count = c_engine.execute(sql_query).scalar()
             t_dict.update({t:rows_count})

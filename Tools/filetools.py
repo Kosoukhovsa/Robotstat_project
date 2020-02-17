@@ -25,6 +25,7 @@ class FileEngine():
 
         try:
             f = pd.read_excel(path_name, 'Dict_list')
+            print(f)
         except:
             return {}
         else:
