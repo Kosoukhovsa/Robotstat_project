@@ -9,14 +9,14 @@ class FileEngine():
     def GetListData(listname):
         path_name = os.path.join(basedir, 'Tools/Dictionaries.xlsx')
 
-        try:
-            f = pd.read_excel(path_name, listname)
+        #try:
+        f = pd.read_excel(path_name, listname)
 
-        except:
-            return {}
-        else:
-            d = f.to_dict(orient='records')
-            return d
+        #except:
+        #    return {}
+        #else:
+        d = f.to_dict(orient='records')
+        return d
 
     @staticmethod
     # Возвращает список справочников
