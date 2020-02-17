@@ -39,7 +39,6 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data.lower()).first()
-
         print(user.check_password(form.password.data))
         if user is not None and user.check_password(form.password.data):
             print(user)
