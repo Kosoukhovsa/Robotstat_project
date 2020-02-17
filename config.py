@@ -28,8 +28,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-    'sqlite://'
+    SQLALCHEMY_DATABASE_URI = 'postgres://postgres:12345qwz@localhost/robotstat'
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'postgres://rdjjeqqruepejj:281aa5775fac3cf353e59e7f76915aed835e39014e9b0e9eb12505edcfe4ff2e@ec2-46-137-177-160.eu-west-1.compute.amazonaws.com:5432/d6boaecl153lmg'
