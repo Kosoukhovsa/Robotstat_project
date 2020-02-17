@@ -450,7 +450,7 @@ class Diagnoses(db.Model):
     clinic = db.Column(db.Integer(), db.ForeignKey('Clinics.id'), index = True)
     history = db.Column(db.Integer(), db.ForeignKey('Histories.id'), index = True)
     patient = db.Column(db.Integer(), db.ForeignKey('Patients.id'))
-    diagnose = db.Column(db.Integer(), db.ForeignKey('Diagnoses.id'))
+    diagnose = db.Column(db.Integer(), db.ForeignKey('DiagnosesItems.id'))
     side_damage = db.Column(db.String(100))
     date_created = db.Column(db.Date())
     prothes = db.Column(db.Integer(), db.ForeignKey('Prosthesis.id'))
