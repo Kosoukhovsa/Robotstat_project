@@ -1,0 +1,174 @@
+{% import "_macros.html" as m %}
+
+{% macro AmbulanceForm(AmbulanceMainForm, h, history_event_id, event, items) %}
+<form class="form-inline bg-light border" method="post">
+
+      {{AmbulanceMainForm.csrf_token()}}
+      {{ m.render_field(AmbulanceMainForm.event) }}
+      {{ m.render_field(AmbulanceMainForm.doctor) }}
+      {{ m.render_field(AmbulanceMainForm.date_begin) }}
+      {{AmbulanceMainForm.submit(class='btn btn-primary')}}
+
+</form>
+<hr>
+<form class="form bg-light" method="POST" action="{{url_for('history.save_indicators', h=h, h_e=history_event_id, pill=1)}}">
+<input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=11>
+  <div class="row">
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Значение</th>
+          <th scope="col">Ед. измерения</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <input id="indicator_id" type = "hidden" class="form-control" name="indicator_id" type="number" value={{i.id}}>
+          <td>{{i.description}}</td>
+          <td>
+            <input id="num_value" class="form-control" name="num_value" type="number" step="1" value={{i.num_value}}>
+          </td>
+          <td>
+            <a>{{i.unit}}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p><input type="submit" class="btn-primary" name="save_indicators" value="Сохранить"></p>
+</form>
+
+{% endmacro%}
+
+{% macro InstumentalForm(IndicatorsForm, h, history_event_id, items_2, pill) %}
+<form class="form bg-light" method="POST" action="{{url_for('history.save_indicators', h=h, h_e=history_event_id, pill=2)}}">
+  {{IndicatorsForm.csrf_token()}}
+  <div class="form-row">
+    <div class="col-3">
+      <input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=2>
+    </div>
+  </div>
+  <div>
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Передне-задняя проекция</th>
+          <th scope="col">Боковая проекция</th>
+          <th scope="col">Результат</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items_2 %}
+        <tr>
+          <input id="indicator" type = "hidden" class="form-control" name="indicator" type="number" value={{i.indicator}}>
+          <td>{{i.description}}</td>
+          <td>
+            <input id="text_value_1" class="form-control" name="text_value_1" type="text" maxlength="3" value={{i.text_value_1}}>
+          </td>
+          <td>
+            <input id="text_value_2" class="form-control" name="text_value_2" type="text" maxlength="3" value={{i.text_value_2}}>
+          </td>
+          <td>
+            <input id="text_value_3" class="form-control" name="text_value_3" type="text" maxlength="3" value={{i.text_value_3}}>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+<p><input type="submit" class="btn-primary" name="save_indicators" value="Сохранить"></p>
+</form>
+{% endmacro %}
+
+{% macro Prosthesis(ProsthesisForm, h, history_event_id, pill) %}
+<form class="form-inline bg-light border" method="post">
+
+      {{ProsthesisForm.csrf_token()}}
+      {{ m.render_field(ProsthesisForm.prosthesis) }}
+      {{ProsthesisForm.submit(class='btn btn-primary')}}
+
+</form>
+{% endmacro %}
+
+
+{% macro TelerentgenographyForm(TelerentgenographyForm, h, history_event_id, items_3, pill) %}
+<form class="form bg-light" method="POST" action="{{url_for('history.save_indicators', h=h, h_e=history_event_id, pill=4)}}">
+  {{TelerentgenographyForm.csrf_token()}}
+  <div class="form-row">
+    <div class="col-3">
+      <input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=3>
+    </div>
+  </div>
+  <div>
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Значение</th>
+          <th scope="col">Ед измерения</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items_3 %}
+        <tr>
+          <input id="indicator_id" type = "hidden" class="form-control" name="indicator_id" type="number" value={{i.id}}>
+          <td>{{i.description}}</td>
+          <td>
+            <input id="num_value" class="form-control" name="num_value" type="number" step="1" min = 0 max=360 value={{i.num_value}}>
+          </td>
+          <td>
+            <a>{{i.unit}}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+<p><input type="submit" class="btn-primary" name="save_indicators" value="Сохранить"></p>
+</form>
+{% endmacro %}
+
+{% macro PreoperativeForm(PreoperativeForm, h, history_event_id, items, pill) %}
+<form class="form bg-light" method="POST" action="{{url_for('history.save_indicators', h=h, h_e=history_event_id, pill=5)}}">
+  {{PreoperativeForm.csrf_token()}}
+  <div class="form-row">
+    <div class="col-3">
+      <input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=4>
+    </div>
+  </div>
+  <div>
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Есть исследования?</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <input id="indicator_id" type = "hidden" class="form-control" name="indicator_id" type="number" value={{i.id}}>
+          <td>{{i.description}}</td>
+          <td>
+            <select class="form-control mx-1 my-1" id="select_value" name="select_value" required>
+              {% if i.text_value == 'Да' %}
+              <option selected value="Да">Да</option>
+              <option value="Нет">Нет</option>
+              {% else %}
+              <option value="Да">Да</option>
+              <option selected value="Нет">Нет</option>
+              {% endif %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+<p><input type="submit" class="btn-primary" name="save_indicators" value="Сохранить"></p>
+</form>
+{% endmacro %}

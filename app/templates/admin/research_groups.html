@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    <!--<h5>Ведение полномочий</h5>-->
+  </div>
+  <div class="card-body">
+        <!--Панель присвоения полномочий-->
+        <!--Заголовок формы-->
+        <form class="form p-2 text-white bg-secondary" method="post">
+          {{GroupForm.csrf_token()}}
+          <div class="row">
+            <div class="col">
+              {{wtf.form_field(GroupForm.description)}}
+            </div>
+            <div class="col">
+              {{wtf.form_field(GroupForm.clinic)}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              {{GroupForm.submit_ok(class='btn btn-primary')}}
+            </div>
+          </div>
+        </form>
+        <!--end of заголовок формы-->
+        <!--фильтр таблицы-->
+        <div class="row">
+          <div class="col">
+            <form class="form-inline my-2 p-2 bg-light text-muted justify-content-around" method="POST">
+              {{GroupFilterForm.csrf_token()}}
+              <div class="form-group">
+                {{GroupFilterForm.clinic_filter.label(class="form-control-label mx-2")}}
+                {{GroupFilterForm.clinic_filter(class="form-control")}}
+              </div>
+                {{GroupFilterForm.submit_filter(class='btn btn-primary')}}
+              <!--<input type="button" class="btn btn-primary" value="set_filter" >
+              <a class="btn btn-outline-primary" href="{{url_for('admin.user_role')}}">Фильтр</a> -->
+            </form>
+          </div>
+        </div>
+        <!--end of фильтр таблицы-->
+        <div class="row">
+          <div class="col">
+            <!--Таблица-->
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Группа</th>
+                  <th scope="col">Клиника</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for g in groups %}
+                <tr>
+                  <td>{{g.id}}</td>
+                  <td>{{g.description}}</td>
+                  <td>{{g.clinic}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!--end of Таблица-->
+          </div>
+        </div>
+        {{ macros.pagination_w(pagination, 'admin.research_groups_edit') }}
+      </div>
+      <div class="card-footer">
+
+      </div>
+    </div>
+{% endblock %}

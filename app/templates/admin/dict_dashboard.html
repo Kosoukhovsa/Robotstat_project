@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    Справочники системы
+  </div>
+  <div class="card-body">
+        <!--Панель присвоения полномочий-->
+        <!--Заголовок формы-->
+        <form class="form p-2 text-white bg-secondary" method="post">
+          <div class="row">
+            <div class="col">
+              <a class="btn btn-primary" name = "load_all" href="{{ url_for('.dict_load_all') }}">Загрузить</a>
+            </div>
+            <div class="col">
+              <label for="select_all">Загрузка всех справочников из файла</label>
+            </div>
+          </div>
+        </form>
+        <!--end of заголовок формы-->
+        <div class="row">
+          <div class="col">
+            <!--Таблица-->
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Таблица</th>
+                  <th scope="col">Количество записей</th>
+                  <th scope="col"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for (t,r) in tables_dict.items() %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('.dict_edit_switch', t=t) }}">{{t}}</a>
+                  </td>
+                  <td>
+                    <a a href="#" class="badge badge-info" >{{r}}</a>                  
+                  </td>
+                  <td>
+                    {% if r > 0%}
+                    <a class="btn btn-danger" href="{{ url_for('.dict_load', t=t) }}">Загрузить</a>
+                    {% else %}
+                    <a class="btn btn-primary" href="{{ url_for('.dict_load', t=t) }}">Загрузить</a>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!--end of Таблица-->
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+
+      </div>
+    </div>
+{% endblock %}

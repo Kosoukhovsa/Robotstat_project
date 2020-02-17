@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    <h5>{{title}}</h5>
+    {{HistoryEditForm.csrf_token()}}
+    <ul class="nav nav-pills card-header-pills">
+      <li class="nav-item">
+        <a class="nav-link active"  data-toggle="pill" href="#passport">Паспортная часть</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="pill" href="#diagnoses">Диагнозы</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="pill" href="#ambulance">Амбулаторные приемы</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" data-toggle="pill" href="#hospital">Госпитализации</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <div class="tab-pane container active mx-0" id="passport">
+
+            <div class="row">
+              <div class="col">
+                <form class="form-inline my-2 p-2 bg-light text-muted justify-content-around" method="POST">
+                  {{HistoryEditForm.csrf_token()}}
+                <div class="form-group">
+                  {{HistoryEditForm.hist_number.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.hist_number(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.date_in.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.date_in(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.clinic.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.clinic(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.snils.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.snils(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.birthdate.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.birthdate(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.sex.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.sex(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.research_group.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.research_group(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.date_research_in.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.date_research_in(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.date_research_out.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.date_research_out(class="form-control")}}
+                </div>
+                <div class="form-group">
+                  {{HistoryEditForm.reason.label(class="form-control-label mx-2")}}
+                  {{HistoryEditForm.reason(class="form-control")}}
+                </div>
+                </form>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <a class="btn btn-primary" href="#">Сохранить</a>
+              </div>
+            </div>
+
+        </div>
+
+        </div>
+      </div>
+      <div class="tab-pane container fade" id="diagnoses">
+          Диагнозы
+      </div>
+      <div class="tab-pane container fade" id="ambulance">
+          Амбулаторные исследования
+      </div>
+      <div class="tab-pane container fade" id="hospital">
+          Госпитализации
+      </div>
+    </div>
+
+  </div>
+
+
+</div>
+{% endblock %}

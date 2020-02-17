@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    <!--<h5>Ведение полномочий</h5>-->
+  </div>
+  <div class="card-body">
+        <!--Панель присвоения полномочий-->
+        <!--Заголовок формы-->
+        <form class="form p-2 text-white bg-secondary" method="post">
+          {{UserForm.csrf_token()}}
+          <div class="row">
+            <div class="col">
+              {{wtf.form_field(UserForm.user)}}
+            </div>
+            <div class="col">
+              {{wtf.form_field(UserForm.role)}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              {{wtf.form_field(UserForm.action)}}
+            </div>
+            <div class="col">
+              {{UserForm.submit_ok(class='btn btn-primary')}}
+            </div>
+          </div>
+        </form>
+        <!--end of заголовок формы-->
+        <!--фильтр таблицы-->
+        <div class="row">
+          <div class="col">
+            <form class="form-inline my-2 p-2 bg-light text-muted justify-content-around" method="POST">
+              {{UserFilterForm.csrf_token()}}
+              <div class="form-group">
+                {{UserFilterForm.user_filter.label(class="form-control-label mx-2")}}
+                {{UserFilterForm.user_filter(class="form-control")}}
+              </div>
+              <div class="form-group">
+                {{UserFilterForm.role_filter.label(class="form-control-label mx-2")}}
+                {{UserFilterForm.role_filter(class="form-control")}}
+              </div>
+                {{UserFilterForm.submit_filter(class='btn btn-primary')}}
+              <!--<input type="button" class="btn btn-primary" value="set_filter" >
+              <a class="btn btn-outline-primary" href="{{url_for('admin.user_role')}}">Фильтр</a> -->
+            </form>
+          </div>
+        </div>
+        <!--end of фильтр таблицы-->
+        <div class="row">
+          <div class="col">
+            <!--Таблица-->
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">User</th>
+                  <th scope="col">Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ur in userroles %}
+                <tr>
+                  <td>{{ur.id}}</td>
+                  <td>{{Users.query.get(ur.user).username}}</td>
+                  <td>{{Roles.query.get(ur.role).description}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!--end of Таблица-->
+          </div>
+        </div>
+        {{ macros.pagination_w(pagination, 'admin.user_role') }}
+      </div>
+      <div class="card-footer">
+
+      </div>
+    </div>
+{% endblock %}

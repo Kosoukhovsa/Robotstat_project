@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    <!--<h5>Ведение полномочий</h5>-->
+  </div>
+  <div class="card-body">
+        <!--Панель присвоения полномочий-->
+        <!--Заголовок формы-->
+        <form class="form p-2 text-white bg-secondary" method="post">
+          {{Form.csrf_token()}}
+          <div class="row">
+            <div class="col">
+              {{wtf.form_field(Form.clinic)}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              {{wtf.form_field(Form.action)}}
+            </div>
+            <div class="col">
+              {{Form.submit_ok(class='btn btn-primary')}}
+            </div>
+          </div>
+        </form>
+        <!--end of заголовок формы-->
+        <div class="row">
+          <div class="col">
+            <!--Таблица-->
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Клиника</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in clinic_list %}
+                <tr>
+                  <td>{{c.id}}</td>
+                  <td>{{c.description}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!--end of Таблица-->
+          </div>
+        </div>
+        {{ macros.pagination_w(pagination, 'admin.list_clinics') }}
+      </div>
+      <div class="card-footer">
+
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block page_content %}
+<div class="card">
+  <div class="card-header m-0">
+    <h5>{{title}}</h5>
+  </div>
+  <div class="card-body">
+        <!--Панель выборки историй болезни-->
+
+        <div class="row">
+          <div class="col">
+            <form class="form-inline my-2 p-2 bg-light text-muted justify-content-around" method="POST">
+              {{HistoryFilterForm.csrf_token()}}
+              <div class="form-group">
+                {{HistoryFilterForm.snils_filter.label(class="form-control-label mx-2")}}
+                {{HistoryFilterForm.snils_filter(class="form-control")}}
+              </div>
+              <div class="form-group">
+                {{HistoryFilterForm.clinic_filter.label(class="form-control-label mx-2")}}
+                {{HistoryFilterForm.clinic_filter(class="form-control")}}
+              </div>
+                {{HistoryFilterForm.submit_filter(class='btn btn-primary')}}
+              <!--<input type="button" class="btn btn-primary" value="set_filter" >
+              <a class="btn btn-outline-primary" href="{{url_for('admin.user_role')}}">Фильтр</a> -->
+            </form>
+          </div>
+        </div>
+        <!--end of фильтр таблицы-->
+        <div class="row">
+          <div class="col">
+            <!--Таблица-->
+            <table class="table">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">№</th>
+                  <th scope="col">Клиника</th>
+                  <th scope="col">Дата создания</th>
+                  <th scope="col">Дата включения в исследование</th>
+                  <th scope="col">Дата исключения из исследования</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for h in histories %}
+                <tr>
+                  <td>
+                    <a href="{{ url_for('.history_edit', h=h.id, pill=1) }}">{{h.hist_number}}</a>
+                  </td>
+                  <td>{{h.clinic}}</td>
+                  <td>{{h.date_in}}</td>
+                  <td>{{h.date_research_in}}</td>
+                  <td>{{h.date_research_out}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <!--end of Таблица-->
+          </div>
+        </div>
+        {{ macros.pagination_w(pagination, 'history.history_select') }}
+      </div>
+      <div class="card-footer">
+
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% import "_macros.html" as m %}
+
+{% macro HistoryMainForm(HistoryMainForm) %}
+    <form class="form-inline bg-light justify-content-around" method="POST">
+      {{HistoryMainForm.csrf_token()}}
+      {{ m.render_field(HistoryMainForm.hist_number) }}
+      {{ m.render_field(HistoryMainForm.date_in) }}
+      {{ m.render_field(HistoryMainForm.clinic) }}
+      {{ m.render_field(HistoryMainForm.snils) }}
+      {{ m.render_field(HistoryMainForm.birthdate) }}
+      {{ m.render_field(HistoryMainForm.sex) }}
+      {{ m.render_field(HistoryMainForm.research_group) }}
+      {{ m.render_field(HistoryMainForm.doctor_researcher) }}
+      {{ m.render_field(HistoryMainForm.date_research_in) }}
+      {{ m.render_field(HistoryMainForm.date_research_out) }}
+      {{ m.render_field(HistoryMainForm.reason) }}
+      <div class="row">
+        <div class="col">
+          {{HistoryMainForm.submit(class='btn btn-primary')}}
+        </div>
+      </div>
+  </form>
+{% endmacro %}
+
+{% macro FirstForm(FirstForm, h, history_event_id, items, pill) %}
+<form class="form bg-light" method="POST" action="{{url_for('history.save_indicators', h=h, h_e=history_event_id, pill=2)}}">
+  {{FirstForm.csrf_token()}}
+  <div class="form-row">
+    <div class="col-3">
+      {{ m.render_field(FirstForm.date_begin) }}
+      <input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=11>
+    </div>
+  </div>
+  <div>
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Значение</th>
+          <th scope="col">Ед. измерения</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        <tr>
+          <input id="indicator_id" type = "hidden" class="form-control" name="indicator_id" type="number" value={{i.id}}>
+          <td>{{i.description}}</td>
+          <td>
+            <input id="num_value" class="form-control" name="num_value" type="number" step="1" max=250 value={{i.num_value}}>
+          </td>
+          <td>
+            <a>{{i.unit}}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+<p><input type="submit" class="btn-primary" name="save_indicators" value="Сохранить"></p>
+</form>
+{% endmacro %}
+
+
+{% macro DiagnosForm(MainDiagnosForm, OtherDiagnosForm, diagnoses_items, h, pill) %}
+<!--Диагнозы-->
+<!--Основной диагноз-->
+<h5>Основной диагноз</h5>
+<form class="form-inline bg-light border" method="post">
+  {{MainDiagnosForm.csrf_token()}}
+  {{ m.render_field(MainDiagnosForm.diagnos) }}
+  {{ m.render_field(MainDiagnosForm.side_damage) }}
+  {{ m.render_field(MainDiagnosForm.date_created) }}
+  {{MainDiagnosForm.submit(class='btn btn-primary')}}
+</form>
+<hr>
+<!--Сопутствующие диагнозы-->
+<h5>Сопутствующий диагноз</h5>
+<form class="form-inline bg-light border" method="post">
+  {{OtherDiagnosForm.csrf_token()}}
+  {{ m.render_field(OtherDiagnosForm.diagnos) }}
+  {{ m.render_field(OtherDiagnosForm.date_created) }}
+  {{OtherDiagnosForm.submit(class='btn btn-primary mx-1 my-1')}}
+</form>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Диагноз</th>
+      <th scope="col">Шифр МКБ10</th>
+      <th scope="col">Дата установления</th>
+      <th scope="col"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in diagnoses_items %}
+    <tr>
+      <input id="diagnos_id" type = "hidden" class="form-control" name="diagnos_id" type="number" value={{item.id}}>
+      <td>{{item.description}}</td>
+      <td>{{item.mkb10}}</td>
+      <td>{{item.date_created}}</td>
+      <td>
+      <a class="btn btn-danger" href="{{ url_for('history.diagnose_delete', h=h, d=item.id, pill=pill) }}">Удалить</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+{% macro AmbulanceListForm(h, ambulance_events, NewAmbulanceForm) %}
+
+<form class="form-inline bg-light border" method="post">
+  {{NewAmbulanceForm.csrf_token()}}
+  {{ m.render_field(NewAmbulanceForm.event) }}
+  {{NewAmbulanceForm.submit(class='btn btn-primary')}}
+</form>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Дата</th>
+      <th scope="col">Вид амбулаторного приема</th>
+    </tr>
+  </thead>
+  <tbody>
+     {% for ambulance_event in ambulance_events %}
+    <tr>
+
+      <td>
+        <a href="{{ url_for('history.ambulance_edit', h=h, h_e=ambulance_event.event_id,
+                            e_type=ambulance_event.event_type, pill=1) }}">{{ambulance_event.event_date}}</a>
+      </td>
+      <td>
+        <a>{{ambulance_event.event_name}}</a>
+      </td>
+
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+
+
+{% endmacro %}
