@@ -39,7 +39,10 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(username=form.username.data.lower()).first()
+
+        print(user.check_password(form.password.data))
         if user is not None and user.check_password(form.password.data):
+            print(user)
             login_user(user, form.remember_me.data)
             next = request.args.get('next')
             if next is None or not next.startswith('/'):
