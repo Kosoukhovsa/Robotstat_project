@@ -116,10 +116,10 @@ def FillHistoryForm(MainForm, FirstForm, MainDiagnosForm, history):
             MainDiagnosForm.date_created.data = main_diagnose.date_created
 
         # Добавление амбулаторных приемов
-        ambulance_events = history.get_events(type=2)
+        ambulance_events = history.get_events(type='2')
 
         # Добавление госпитализаций
-        hospital_events = history.get_events(type=3)
+        hospital_events = history.get_events(type='3')
 
 
         return([MainForm, FirstForm, MainDiagnosForm, event, items, diagnoses_items, ambulance_events, hospital_events])

@@ -431,7 +431,7 @@ def hospital_edit(h, h_e, pill):
         flash('Данные сохранены', category='info')
         return redirect(url_for('history.hospital_edit', h=h, h_e=hospital_event.id, pill=pill))
 
-    items_5 = []
+    items = []
 
     if hospital_event is not None:
         # Открываем уже сущестующую госпитализацию
