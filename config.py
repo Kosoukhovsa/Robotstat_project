@@ -6,15 +6,13 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     #SECRET_KEY = open('/path/to/secret/file').read()
     SECRET_KEY = SECRET_KEY = os.environ.get('SECRET_KEY', secrets.token_urlsafe(16))
-    #os.environ.get('SECRET_KEY', 'my_secret_key_@!@%@^%!^12212')
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.googlemail.com')
     MAIL_PORT = os.environ.get('MAIL_PORT', '587')
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true')
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'robotstatmail@gmail.com')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'rg$5J8YqvR')
-    #FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
-    #FLASKY_MAIL_SENDER = 'Flasky Admin <robotstatmail@gmail.com>'
-    MAIL_ADMIN = os.environ.get('MAIL_ADMIN','ikpservicemail@gmail.com')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    IKP_MAIL_SUBJECT_PREFIX = '[IKP]'
+    MAIL_ADMIN = os.environ.get('MAIL_ADMIN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     @staticmethod

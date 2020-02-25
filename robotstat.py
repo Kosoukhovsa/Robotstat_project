@@ -4,6 +4,12 @@ from flask_migrate import Migrate
 from flask_mail import Message
 from app import create_app, db, mail
 from app.models import Clinics, Patients, Users, UserRoles, Roles
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 migrate = Migrate(app, db)

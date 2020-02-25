@@ -95,6 +95,17 @@
         </div>
       {% endif %}
 
+      <!-- Госпитализация-->
+      {% if pill == '5' %}
+        <div class="tab-pane active" id="hospital">
+          {{forms.HospitalListForm(h, hospital_events, NewHospitalForm)}}
+        </div>
+      {% else %}
+        <div class="tab-pane fade" id="hospital">
+          {{forms.HospitalListForm(h, hospital_events, NewHospitalForm)}}
+        </div>
+      {% endif %}
+
 
         <div class="tab-pane fade" id="hospital">
             Госпитализации

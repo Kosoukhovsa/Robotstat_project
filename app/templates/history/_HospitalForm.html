@@ -1,0 +1,64 @@
+{% import "_macros.html" as m %}
+
+{% macro HospitalSubForm1(HospitalSubForm1, pill) %}
+    <form class="form-inline bg-light justify-content-around" method="POST">
+      {{HospitalSubForm1.csrf_token()}}
+      {{ m.render_field(HospitalSubForm1.date_begin) }}
+      {{ m.render_field(HospitalSubForm1.date_end) }}
+      {{ m.render_field(HospitalSubForm1.doctor) }}
+      {{ m.render_field(HospitalSubForm1.doctor_chief) }}
+      {{ m.render_field(HospitalSubForm1.days1, disabled=True) }}
+      {{ m.render_field(HospitalSubForm1.days2, disabled=True) }}
+      {{ m.render_field(HospitalSubForm1.days3, disabled=True) }}
+      <div class="row">
+        <div class="col">
+          {{HospitalSubForm1.submit(class='btn btn-primary')}}
+        </div>
+      </div>
+  </form>
+{% endmacro %}
+
+{% macro HospitalSubForm2(HospitalSubForm2, history, h_e, items, pill) %}
+<form class="form-inline bg-light" method="POST" action="{{url_for('history.save_indicators', h=history.id, h_e=h_e, pill=2)}}">
+  <input id="indicator_group" type = "hidden" class="form-control" name="indicator_group" type="number" value=5>
+      {{HospitalSubForm2.csrf_token()}}
+      <div class="col-3">
+        {{ m.render_field(HospitalSubForm2.date_begin) }}
+      </div>
+      <div class="col-3">
+        {{HospitalSubForm2.save_indicators(class='btn btn-primary')}}
+      </div>
+<hr>
+
+    <table class="table">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">Показатель</th>
+          <th scope="col">Значение</th>
+          <th scope="col">Комментарий</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!--Жалобы-->
+        {{ m.table_row(field=HospitalSubForm2.claims, indicator_name='Жалобы', indicator_id=49, items=items)}}
+        <!--Анамнез заболевания: жалобы в течение -->
+        {{ m.table_row(field=HospitalSubForm2.claims_time, indicator_name='Анамнез заболевания: жалобы в течение', indicator_id=50, items=items)}}
+        <!--Анамнез жизни: Перенесенные заболевания  -->
+        {{ m.table_row(field=HospitalSubForm2.diseases, indicator_name='Анамнез жизни: Перенесенные заболевания', indicator_id=51, items=items)}}
+        <!--Анамнез жизни: Операции, травмы  -->
+        {{ m.table_row(field=HospitalSubForm2.traumas, indicator_name='Анамнез жизни: Операции, травмы', indicator_id=52, items=items)}}
+        <!--Курение   -->
+        {{ m.table_row(field=HospitalSubForm2.smoking, indicator_name='Курение', indicator_id=53, items=items)}}
+        <!--Алкоголь   -->
+        {{ m.table_row(field=HospitalSubForm2.alcohol, indicator_name='Алкоголь', indicator_id=54, items=items)}}
+        <!--Аллергологический анамнез   -->
+        {{ m.table_row(field=HospitalSubForm2.allergy, indicator_name='Аллергологический анамнез', indicator_id=55, items=items)}}
+        <!--Наследственные заболевания   -->
+        {{ m.table_row(field=HospitalSubForm2.genetic, indicator_name='Наследственные заболевания', indicator_id=56, items=items)}}
+
+      </tbody>
+    </table>
+
+
+</form>
+{% endmacro %}

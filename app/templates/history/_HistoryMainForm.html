@@ -72,6 +72,26 @@
   {{ m.render_field(MainDiagnosForm.date_created) }}
   {{MainDiagnosForm.submit(class='btn btn-primary')}}
 </form>
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Диагноз</th>
+      <th scope="col">Шифр МКБ10</th>
+      <th scope="col">Дата установления</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in diagnoses_items %}
+    {% if item.type == 'Основной' %}
+    <tr>
+      <td>{{item.description}}</td>
+      <td>{{item.mkb10}}</td>
+      <td>{{item.date_created}}</td>
+    {% endif %}
+    {% endfor %}
+    </tr>
+  </tbody>
+</table>
 <hr>
 <!--Сопутствующие диагнозы-->
 <h5>Сопутствующий диагноз</h5>
@@ -132,6 +152,44 @@
       </td>
       <td>
         <a>{{ambulance_event.event_name}}</a>
+      </td>
+
+    </tr>
+    {% endfor %}
+
+  </tbody>
+</table>
+
+{% endmacro %}
+
+{% macro HospitalListForm(h, hospital_events, NewHospitalForm) %}
+
+<form class="form-inline bg-light border" method="post">
+  {{NewHospitalForm.csrf_token()}}
+  {{NewHospitalForm.submit(class='btn btn-primary')}}
+</form>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Дата госпитализации</th>
+      <th scope="col">Дата выписки</th>
+      <th scope="col">Лечащий врач</th>
+    </tr>
+  </thead>
+  <tbody>
+     {% for hospital in hospital_events %}
+    <tr>
+
+      <td>
+        <a href="{{ url_for('history.hospital_edit', h=h, h_e=hospital.event_id,
+                            pill=1) }}">{{hospital.event_date_begin}}</a>
+      </td>
+      <td>
+        <a>{{hospital.event_date_begin}}</a>
+      </td>
+      <td>
+        <a>{{hospital.doctor}}</a>
       </td>
 
     </tr>

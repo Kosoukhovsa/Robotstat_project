@@ -41,4 +41,7 @@ def create_app(config_name):
     from app.history import bp as history_bp
     app.register_blueprint(history_bp)
 
+    from app.api import api as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api/v1')
+
     return app

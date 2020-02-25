@@ -3,7 +3,7 @@ from app import db
 from app.history import bp
 from app.history.forms import HistoryFilterForm, HistoryMainForm, IndicatorsForm, IndicatorItemForm
 from app.models import Histories, Clinics, Diagnoses, Patients, Indicators, HistoryEvents,\
-                       IndicatorValues, DiagnosesItems, Events, Prosthesis
+                       IndicatorValues, DiagnosesItems, Events, Prosthesis, Operations
 from datetime import datetime
 from hashlib import md5
 from sqlalchemy import and_, or_, not_
@@ -106,42 +106,23 @@ def FillHistoryForm(MainForm, FirstForm, MainDiagnosForm, history):
         FirstForm.date_begin.data = event.date_begin
         # Добавление показателей первичного обращения
         items = event.get_indicators_values(11)
+        # список диагнозов для отображения в форме
+        diagnoses_items = history.get_diagnoses()[0]
+        main_diagnose = history.get_diagnoses()[1]
 
-        # список сопутствующих диагнозов для отображения в форме
-        diagnoses = Diagnoses.query.filter(Diagnoses.history==history.id).all()
-        diagnoses_items = []
-        main_diagnos = None
-        for d in diagnoses:
-            diagnose_item = DiagnosesItems.query.get(d.diagnose)
-            if diagnose_item.type == 'Основной':
-                main_diagnos = d
-            else:
-                item = {}
-                item['id'] = d.id
-                item['description'] = diagnose_item.description
-                item['mkb10'] = diagnose_item.mkb10
-                item['date_created'] = d.date_created
-                diagnoses_items.append(item)
-
-        if main_diagnos is not None:
-            MainDiagnosForm.diagnos.data = main_diagnos.diagnose
-            MainDiagnosForm.side_damage.data = main_diagnos.side_damage
-            MainDiagnosForm.date_created.data = main_diagnos.date_created
+        if main_diagnose is not None:
+            MainDiagnosForm.diagnos.data = main_diagnose.diagnose
+            MainDiagnosForm.side_damage.data = main_diagnose.side_damage
+            MainDiagnosForm.date_created.data = main_diagnose.date_created
 
         # Добавление амбулаторных приемов
-        ambulances = HistoryEvents.query.join(Events, Events.id==HistoryEvents.event).\
-                            filter(and_(HistoryEvents.history==history.id,  Events.type=='2')).all()
-        ambulance_events = []
-        for a in ambulances:
-            ambulance_item = Events.query.get(a.event)
-            item = {}
-            item['event_id'] = a.id
-            item['event_date'] = a.date_begin
-            item['event_name'] = ambulance_item.description
-            item['event_type'] = ambulance_item.id
-            ambulance_events.append(item)
+        ambulance_events = history.get_events(type=2)
 
-        return([MainForm, FirstForm, MainDiagnosForm, event, items, diagnoses_items, ambulance_events])
+        # Добавление госпитализаций
+        hospital_events = history.get_events(type=3)
+
+
+        return([MainForm, FirstForm, MainDiagnosForm, event, items, diagnoses_items, ambulance_events, hospital_events])
 
     else:
         # История не найдена
@@ -224,18 +205,12 @@ def CreateAmbulance(AmbulanceForm, history, event):
         ambulance_event.date_begin = AmbulanceForm.date_begin.data
         ambulance_event.doctor = AmbulanceForm.doctor.data
         db.session.add(ambulance_event)
-        # Показатели: Физические параметры (самооценка при первичном опросе)
-        indicators = Indicators.query.filter(Indicators.group==11).all()
-        for i in indicators:
-            new_i = IndicatorValues()
-            new_i.clinic = ambulance_event.clinic
-            new_i.history = ambulance_event.history
-            new_i.patient = ambulance_event.patient
-            new_i.history_event = ambulance_event.id
-            new_i.indicator = i.id
-            db.session.add(new_i)
-        # Показатели: Телерентгенография
-        indicators = Indicators.query.filter(Indicators.group==3).all()
+        # Показатели:
+        # 11 - Физические параметры (самооценка при первичном опросе)
+        # 3 - Телерентгенография
+        # 4 - Предоперационные обследования
+        indicators = Indicators.query.filter(Indicators.group in [11,3,4]).\
+                                order_by(Indicators.group, Indicators.id).all()
         for i in indicators:
             new_i = IndicatorValues()
             new_i.clinic = ambulance_event.clinic
@@ -271,16 +246,6 @@ def CreateAmbulance(AmbulanceForm, history, event):
             new_i.indicator = i.id
             new_i.slice = 'Результат'
             db.session.add(new_i)
-        # Показатели: Предоперационные обследования
-        indicators = Indicators.query.filter(Indicators.group==4).all()
-        for i in indicators:
-            new_i = IndicatorValues()
-            new_i.clinic = ambulance_event.clinic
-            new_i.history = ambulance_event.history
-            new_i.patient = ambulance_event.patient
-            new_i.history_event = ambulance_event.id
-            new_i.indicator = i.id
-            db.session.add(new_i)
 
         db.session.commit()
         return(ambulance_event)
@@ -305,13 +270,13 @@ def FillAmbulanceForm(AmbulanceForm, IndicatorsForm_, ProsthesisForm_, history, 
         AmbulanceForm.doctor.data = ambulance_event.doctor
         AmbulanceForm.date_begin.data = ambulance_event.date_begin
         IndicatorsForm_.date_begin.data = ambulance_event.date_begin
-        indicators = IndicatorValues.query.filter(IndicatorValues.history==history.id, IndicatorValues.history_event==ambulance_event.id).all()
+        #indicators = IndicatorValues.query.filter(IndicatorValues.history==history.id, IndicatorValues.history_event==ambulance_event.id).all()
         # Физические параметры
         items_11 = ambulance_event.get_indicators_values(11)
         # Телерентгенография нижних конечностей
         items_3 = ambulance_event.get_indicators_values(3)
         # Список предоперационных обследований
-        items_4 = ambulance_event.get_indicators_values(4)        
+        items_4 = ambulance_event.get_indicators_values(4)
         # Рентгенография коленного сустава в двух проекциях
         indicators_sliced_values = ambulance_event.get_indicators_values(2, indicators_list=[11,12,13])
 
@@ -349,3 +314,221 @@ def FillAmbulanceForm(AmbulanceForm, IndicatorsForm_, ProsthesisForm_, history, 
     else:
         # История не найдена
         return(None)
+
+# Создание новой госпитализации
+def CreateHospital(HospitalSubForm1_, history):
+    hospital_event = HistoryEvents()
+    hospital_event.clinic = history.clinic
+    hospital_event.history = history.id
+    hospital_event.patient = history.patient
+    hospital_event.event = 3
+    hospital_event.date_begin = HospitalSubForm1_.date_begin.data
+    hospital_event.date_end = HospitalSubForm1_.date_end.data
+    hospital_event.doctor = HospitalSubForm1_.doctor.data
+    hospital_event.doctor_chief = HospitalSubForm1_.doctor_chief.data
+    db.session.add(hospital_event)
+    # Показатели:
+    indicators = Indicators.query.filter(Indicators.group.in_([5,1,7,8])).order_by(Indicators.group,Indicators.id).all()
+    #Рентгенография коленного сустава в двух проекциях
+    indicators_2 = Indicators.query.filter(Indicators.group==2).order_by(Indicators.group,Indicators.id).all()
+    #Телерентгенография нижних конечностей
+    indicators_3 = Indicators.query.filter(Indicators.group==3).order_by(Indicators.group,Indicators.id).all()
+
+    for i in indicators:
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        db.session.add(new_i)
+
+    # Показатели: Телерентгенография
+    for i in indicators_3:
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Значение'
+        db.session.add(new_i)
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'План операции'
+        db.session.add(new_i)
+
+    # Показатели: Рентгенография коленного сустава в двух проекциях
+    for i in indicators_2:
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Передне-задняя проекция'
+        db.session.add(new_i)
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Боковая проекция'
+        db.session.add(new_i)
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Планируемое значение'
+        db.session.add(new_i)
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Фактическое значение'
+        db.session.add(new_i)
+        new_i = IndicatorValues()
+        new_i.clinic = hospital_event.clinic
+        new_i.history = hospital_event.history
+        new_i.patient = hospital_event.patient
+        new_i.history_event = hospital_event.id
+        new_i.indicator = i.id
+        new_i.slice = 'Совпадение'
+        db.session.add(new_i)
+
+    db.session.commit()
+    return(hospital_event)
+
+
+# Обновление госпитализации
+def UpdateHospital(HospitalSubForm1_, hospital_event):
+        hospital_event.date_begin = HospitalSubForm1_.date_begin.data
+        hospital_event.date_end = HospitalSubForm1_.date_end.data
+        hospital_event.doctor = HospitalSubForm1_.doctor.data
+        hospital_event.doctor_chief = HospitalSubForm1_.doctor_chief.data
+        # Расчет койко-дней
+
+        if hospital_event.date_end is not None:
+            delta = hospital_event.date_end - hospital_event.date_begin
+            hospital_event.days1 = delta.days
+        if hospital_event.date_end is None:
+            hospital_event.days1 = 0
+        # Если есть операция, то находим дату
+        operation = Operations.query.filter(Operations.history==hospital_event.history).first()
+        if operation is not None and hospital_event.date_end is not None:
+            # Послеоперационный койко-день
+            delta = hospital_event.date_end - operation.time_begin.date
+            hospital_event.days3 = delta.days
+        if operation is not None:
+            # Предоперационный койко-день
+            delta = operation.time_begin.date - hospital_event.date_begin
+            hospital_event.days2 = delta.days
+        if operation is None:
+            hospital_event.days2 = 0
+            hospital_event.days3 = 0
+
+        #print(type(hospital_event.date_end))
+        db.session.add(hospital_event)
+        db.session.commit()
+        return(hospital_event)
+
+# Заполнение формы госпитализации
+def FillHospitalForm(HospitalSubForm1_, HospitalSubForm2_, history, hospital_event):
+    HospitalSubForm1_.date_begin.data = hospital_event.date_begin
+    HospitalSubForm1_.date_end.data = hospital_event.date_end
+    HospitalSubForm1_.doctor.data = hospital_event.doctor
+    HospitalSubForm1_.doctor_chief.data = hospital_event.doctor_chief
+    HospitalSubForm1_.days1.data = hospital_event.days1
+    HospitalSubForm1_.days2.data = hospital_event.days2
+    HospitalSubForm1_.days3.data = hospital_event.days3
+
+    # Общие данные о пациенте
+    items_5 = hospital_event.get_indicators_values(5)
+    # Заполнить форму
+    for item in items_5:
+        indicator_id = item.get('indicator')
+        HospitalSubForm2_.date_begin.data = item.get('date_value')
+        if indicator_id == 49:
+            HospitalSubForm2_.claims.data = item.get('text_value')
+        if indicator_id == 50:
+            HospitalSubForm2_.claims_time.data = item.get('text_value')
+        if indicator_id == 51:
+            HospitalSubForm2_.diseases.data = item.get('text_value')
+        if indicator_id == 52:
+            HospitalSubForm2_.traumas.data = item.get('text_value')
+        if indicator_id == 53:
+            HospitalSubForm2_.smoking.data = item.get('text_value')
+        if indicator_id == 54:
+            HospitalSubForm2_.alcohol.data = item.get('text_value')
+        if indicator_id == 55:
+            HospitalSubForm2_.allergy.data = item.get('text_value')
+        if indicator_id == 56:
+            HospitalSubForm2_.genetic.data = item.get('text_value')
+
+    # Данные объективного осмотра
+    items_1 = hospital_event.get_indicators_values(1)
+    # Оценка функции сустава и качества жизни по шкалам
+    items_7 = hospital_event.get_indicators_values(7)
+    # Результаты лабораторных исследований
+    items_8 = hospital_event.get_indicators_values(8)
+    # Рентгенография коленного сустава в двух проекциях
+    indicators_sliced_values_2 = hospital_event.get_indicators_values(2, indicators_list=[11,12,13])
+    # Телерентгенография
+    indicators_sliced_values_3 = hospital_event.get_indicators_values(3)
+
+    # Рентгенография коленного сустава в двух проекциях: транспонирование списка
+    item = {}
+    items_2 = []
+    current_indicator = 11
+    for indicator_value in indicators_sliced_values_2:
+        #item['id'] = indicator_value.get('id')
+        if current_indicator != indicator_value.get('indicator'):
+            items_2.append(item)
+            current_indicator = indicator_value.get('indicator')
+            item = {}
+        item['indicator'] = indicator_value.get('indicator')
+        item['description'] = indicator_value.get('description')
+        slice = indicator_value.get('slice')
+        if slice == 'Передне-задняя проекция':
+            item['text_value_1'] = indicator_value.get('text_value')
+        if slice == 'Боковая проекция':
+            item['text_value_2'] = indicator_value.get('text_value')
+        if slice == 'Планируемое значение':
+            item['text_value_3'] = indicator_value.get('text_value')
+        if slice == 'Фактическое значение':
+            item['text_value_4'] = indicator_value.get('text_value')
+        if slice == 'Результат':
+            item['text_value_5'] = indicator_value.get('text_value')
+
+    items_2.append(item)
+
+    # Телерентгенография: транспонирование списка
+    item = {}
+    items_3 = []
+    current_indicator = 16
+    for indicator_value in indicators_sliced_values_3:
+        #item['id'] = indicator_value.get('id')
+        if current_indicator != indicator_value.get('indicator'):
+            items_3.append(item)
+            current_indicator = indicator_value.get('indicator')
+            item = {}
+        item['indicator'] = indicator_value.get('indicator')
+        item['description'] = indicator_value.get('description')
+        slice = indicator_value.get('slice')
+        if slice == 'Значение':
+            item['text_value_1'] = indicator_value.get('text_value')
+        if slice == 'План операции':
+            item['text_value_2'] = indicator_value.get('text_value')
+
+    items_3.append(item)
+
+    return(HospitalSubForm1_, HospitalSubForm2_, [items_1, items_2, items_3, items_5, items_7, items_8])

@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request, session
 from werkzeug.urls import url_parse
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from app import db
 from app.admin import bp
 from app.admin.forms import UserRoleForm, UserRoleFilterForm, ClinicsForm, ResearchGroupForm, ResearchGroupFilterForm
@@ -13,6 +13,7 @@ import pandas
 
 # Список справочников
 @bp.route('/admin/dict_list')
+@login_required
 def dict_list():
     # Получить список таблиц с количеством записей
     # { table: rows }
@@ -76,6 +77,7 @@ def dict_edit_switch(t):
 
 # Справочник Клиник
 @bp.route('/admin/lists/clinics', methods= ['GET','POST'])
+@login_required
 def list_clinics():
     Form = ClinicsForm()
     page = request.args.get('page',1,type=int)
@@ -99,6 +101,7 @@ def list_clinics():
 
 # Справочник Групп исследования
 @bp.route('/research_groups_edit', methods = ['GET','POST'])
+@login_required
 def research_groups_edit():
     GroupForm = ResearchGroupForm()
     GroupFilterForm = ResearchGroupFilterForm()
@@ -148,6 +151,7 @@ def research_groups_edit():
 
 # Ведение полномочий
 @bp.route('/user_role_edit', methods = ['GET','POST'])
+@login_required
 def user_role():
     UserForm = UserRoleForm()
     UserFilterForm = UserRoleFilterForm()

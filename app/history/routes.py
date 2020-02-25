@@ -1,25 +1,28 @@
 from flask import render_template, redirect, url_for, flash, request, session
 from werkzeug.urls import url_parse
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from app import db
 from app.history import bp
 from sqlalchemy import and_, or_, not_
 from app.history.forms import HistoryFilterForm, HistoryMainForm, IndicatorsForm, \
                               IndicatorItemForm, HistoryMainDiagnosForm, HistoryOtherDiagnosForm,\
                               AmbulanceMainForm, HistioryNewAmbulanceForm, ProsthesisForm,\
-                              TelerentgenographyForm, PreoperativeForm
+                              TelerentgenographyForm, PreoperativeForm,\
+                              HospitalSubForm1, NewHospitalForm, HospitalSubForm2
 from app.models import Histories, Clinics, Diagnoses, Patients, Indicators, HistoryEvents,\
                        IndicatorValues, Events, DiagnosesItems, Prosthesis
 from datetime import datetime
 from hashlib import md5
 from app.history.history_tools import CreateHistory, UpdateHistory, FillHistoryForm, \
                                     AddMainDiagnos, AddOtherDiagnos, CreateAmbulance, \
-                                    FillAmbulanceForm, UpdateAmbulance
+                                    FillAmbulanceForm, UpdateAmbulance, CreateHospital,\
+                                    UpdateHospital, FillHospitalForm
 
 
 
 # Список историй болезни
 @bp.route('/history_select', methods = ['GET','POST'])
+@login_required
 def history_select():
 
     FilterForm = HistoryFilterForm()
@@ -80,7 +83,7 @@ def history_select():
 # Параметры:
 # h - Histories.id
 # pill - номер закладки в форме
-
+@login_required
 def history_edit(h, pill):
     history = Histories.query.get(h)
 
@@ -89,6 +92,7 @@ def history_edit(h, pill):
     MainDiagnosForm = HistoryMainDiagnosForm()
     OtherDiagnosForm = HistoryOtherDiagnosForm()
     NewAmbulanceForm = HistioryNewAmbulanceForm()
+    NewHospitalForm_ = NewHospitalForm()
 
         # сохранение истории болезни
     if MainForm.submit.data and MainForm.validate_on_submit():
@@ -131,6 +135,10 @@ def history_edit(h, pill):
             # Переход в форму амбулаторного приема
             return redirect(url_for('history.ambulance_edit', h=history.id, h_e='0', e_type=NewAmbulanceForm.event.data, pill=1))
 
+    if NewHospitalForm_.submit.data and NewHospitalForm_.validate_on_submit():
+            # Переход в форму госпитализации
+            return redirect(url_for('history.hospital_edit', h=history.id, h_e='0', pill=1))
+
     if history is not None:
         # Заполнение формы данными из базы
         form_list = FillHistoryForm(MainForm, FirstForm, MainDiagnosForm, history)
@@ -141,19 +149,25 @@ def history_edit(h, pill):
         items = form_list[4]
         diagnoses_items = form_list[5]
         ambulance_events = form_list[6]
+        hospital_events = form_list[7]
+
     else:
         items = []
         history_event_id = 0
         diagnoses_items = []
         ambulance_events = []
+        hospital_events = []
+
     return render_template('history/history_edit.html', HistoryMainForm=MainForm,
                             h=h, items = items, FirstForm=FirstForm,
                             MainDiagnosForm = MainDiagnosForm,
                             OtherDiagnosForm = OtherDiagnosForm,
                             NewAmbulanceForm = NewAmbulanceForm,
+                            NewHospitalForm = NewHospitalForm_,
                             history_event_id = history_event_id,
                             diagnoses_items = diagnoses_items,
                             ambulance_events = ambulance_events,
+                            hospital_events = hospital_events,
                             pill=pill)
 
 
@@ -248,6 +262,38 @@ def save_indicators(h, h_e, pill):
                             indicator_value.num_value = int(num_values[1])/(int(num_values[0])/100)**2
                     db.session.add(indicator_value)
 
+        elif indicator_group == '5':
+            # Это госпитализация - общие данные
+            comments = request.form.getlist('comment')
+            print(comments)
+            ids = request.form.getlist('indicator_id')
+            # Получим список всех показателей
+            for i, id in enumerate(ids):
+                indicator_value = IndicatorValues.query.filter(IndicatorValues.history_event==h_e,\
+                                                    IndicatorValues.indicator==id).first()
+                if indicator_value:
+                    # Сохранить дату показаний
+                    if request.form.get('date_begin'):
+                        indicator_value.date_value = datetime.strptime(request.form.get('date_begin'), '%Y-%m-%d').date()
+                    if len(comments) > i:
+                        indicator_value.comment = comments[i]
+                    if id == '49':
+                        indicator_value.text_value = request.form.get('claims')
+                    if id == '50':
+                        indicator_value.text_value = request.form.get('claims_time')
+                    if id == '51':
+                        indicator_value.text_value = request.form.get('diseases')
+                    if id == '52':
+                        indicator_value.text_value = request.form.get('traumas')
+                    if id == '53':
+                        indicator_value.text_value = request.form.get('smoking')
+                    if id == '54':
+                        indicator_value.text_value = request.form.get('alcohol')
+                    if id == '55':
+                        indicator_value.text_value = request.form.get('allergy')
+                    if id == '56':
+                        indicator_value.text_value = request.form.get('genetic')
+                    db.session.add(indicator_value)
             db.session.commit()
             flash('Данные сохранены', category='info')
 
@@ -258,6 +304,9 @@ def save_indicators(h, h_e, pill):
     elif event_type == '2':
         # Сохранение выполнено из амбулаторного  приема
         return redirect(url_for('history.ambulance_edit', h=h, h_e=h_e, e_type = event.id, pill=pill))
+    elif event_type == '3':
+        # Сохранение выполнено из госпитализации
+        return redirect(url_for('history.hospital_edit', h=h, h_e=h_e, pill=pill))
 
 # История болезни / Диагнозы
 @bp.route('/diagnose_delete/<h>/<d>/<pill>', methods = ['GET','POST'])
@@ -280,6 +329,7 @@ def diagnose_delete(h,d,pill):
 # h_e - HistoryEvents.id
 # e_type - Тип события
 # pill - номер закладки в форме
+@login_required
 def ambulance_edit(h, h_e, e_type, pill):
     history = Histories.query.get(h)
     AmbulanceForm = AmbulanceMainForm()
@@ -354,3 +404,43 @@ def ambulance_edit(h, h_e, e_type, pill):
                             event=event, history=history, items = items,
                             items_2=items_2, items_3 = items_3,
                             items_4 = items_4, pill=pill)
+
+# Редактирование госпитализации
+@bp.route('/hospital_edit/<h>/<h_e>/<pill>', methods = ['GET','POST'])
+# Параметры:
+# h - Histories.id
+# h_e - HistoryEvents.id
+# pill - номер закладки в форме
+@login_required
+def hospital_edit(h, h_e, pill):
+    history = Histories.query.get(h)
+    hospital_event = HistoryEvents.query.get(h_e)
+    HospitalSubForm1_ = HospitalSubForm1()
+    HospitalSubForm2_ = HospitalSubForm2()
+
+    if HospitalSubForm1_.submit.data: #and HospitalSubForm1_.validate_on_submit():
+
+        pill = 1
+        if hospital_event is None:
+            # Это ввод новой госпитализации
+            hospital_event = CreateHospital(HospitalSubForm1_, history)
+        else:
+            # Обновление амбулаторного приема
+            UpdateHospital(HospitalSubForm1_, hospital_event)
+
+        flash('Данные сохранены', category='info')
+        return redirect(url_for('history.hospital_edit', h=h, h_e=hospital_event.id, pill=pill))
+
+    items_5 = []
+
+    if hospital_event is not None:
+        # Открываем уже сущестующую госпитализацию
+        # Заполнение формы данными из базы
+        form_list = FillHospitalForm(HospitalSubForm1_, HospitalSubForm2_, history, hospital_event)
+        HospitalSubForm1_ = form_list[0]
+        HospitalSubForm2_ = form_list[1]
+        items = form_list[2]
+
+    return render_template('history/hospital.html', HospitalSubForm1 = HospitalSubForm1_,
+                            HospitalSubForm2 = HospitalSubForm2_,
+                            h = h, history = history, h_e = h_e, items = items, pill = pill)

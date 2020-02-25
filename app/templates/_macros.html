@@ -37,14 +37,17 @@
 {%  macro render_field(field) %}
 <div class="form-group">
   {{field.label(class="form-control-label mx-1 my-1 font-weight-bold")}}
-  {{field(class="form-control mx-1 my-1")}}
+  {% if kwargs.get('disabled') %}
+    {{field(class="form-control mx-1 my-1", disabled = True)}}
+  {% else %}
+    {{field(class="form-control mx-1 my-1")}}
+  {% endif %}
 </div>
 {% endmacro %}
 
-{% macro renderfield_with_label(field) -%}
+{% macro renderfield_without_label(field) -%}
 <div class="form-group">
-  {{ field.label(class="form-control-label mx-1 my-1 font-weight-bold") }}
-  {{ field(**kwargs)|safe }}
+  {{field(class="form-control mx-1 my-1")}}
 </div>
 <ul>
     {% for error in field.errors %}
@@ -52,3 +55,30 @@
     {% endfor %}
 </ul>
 {%- endmacro %}
+
+{% macro table_row(field) %}
+<tr>
+  {% set indicator_name = kwargs.get('indicator_name') %}
+  {% set indicator_id = kwargs.get('indicator_id') %}
+  {% set list = kwargs.get('items') %}
+
+
+
+  <input id="indicator_id" type = "hidden" class="form-control" name="indicator_id" type="number" value={{indicator_id}}>
+  <td>
+    {{indicator_name}}
+  </td>
+  <td>
+    {{ renderfield_without_label(field) }}
+  </td>
+  <td>
+    {% for indicator_record in list %}
+        {% if indicator_record['indicator']==indicator_id %}
+          {% set comment_value = indicator_record['comment'] %}
+        {% endif %}
+    {% endfor %}
+    <textarea class="form-control" name="comment" id="comment"  rows="2" cols="80">{{comment_value}}</textarea>
+
+  </td>
+</tr>
+{% endmacro %}

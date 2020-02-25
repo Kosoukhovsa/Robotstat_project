@@ -7,6 +7,7 @@ from hashlib import md5
 import jwt
 from time import time
 from datetime import datetime
+from sqlalchemy import and_, or_, not_
 
 
 @login_manager.user_loader
@@ -51,14 +52,11 @@ class Users(db.Model, UserMixin):
     roles = db.relationship('UserRoles', foreign_keys=[UserRoles.user],
                             backref=db.backref('users', lazy='joined'),
                             lazy='dynamic')
-
     def __repr__(self):
         return f'Пользователь {self.username}'
-
     #@property
     #def password(self):
     #    raise AttributeError('password is not a readable attribute')
-
     #@password.setter
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -87,7 +85,7 @@ class Users(db.Model, UserMixin):
                 "doctor":{"username":"doctor","email":"ikp_doctor@gmail.com","password":"doctor","clinic":"1"},
             "researcher":{"username":"researcher","email":"ikp_researcher@gmail.com","password":"researcher","clinic":"1"}}
         for (k,v) in users.items():
-            user=Users(username=v['username'],email=v['email'],password=v['password'])
+            user=Users(username=v['username'],email=v['email'])
             user.set_password(v["password"])
             user.time_create = datetime.utcnow()
             user.clinic = Clinics.query.get(v["clinic"]).id
@@ -373,6 +371,65 @@ class Histories(db.Model):
     date_research_out = db.Column(db.Date())
     reason = db.Column(db.Integer(), db.ForeignKey('Reasons.id'))
 
+    def get_diagnoses(self, **kwargs):
+        """
+        Выбор диагнозов
+        Возвращает все диагнозы
+        и отдельно - основной
+        Параметры:
+        """
+        # Выбор диагнозов
+        diagnoses = Diagnoses.query.filter(Diagnoses.history==self.id).all()
+        diagnoses_items = []
+        main_diagnose=None
+        for d in diagnoses:
+            diagnose_item = DiagnosesItems.query.get(d.diagnose)
+            item = {}
+            item['id'] = d.id
+            item['description'] = diagnose_item.description
+            item['type'] = diagnose_item.type
+            item['mkb10'] = diagnose_item.mkb10
+            item['date_created'] = d.date_created
+            if diagnose_item.type=='Основной':
+                main_diagnose = d
+            diagnoses_items.append(item)
+
+        return([diagnoses_items, main_diagnose])
+
+    def get_events(self, **kwargs):
+        """
+        Выбор событий
+        Возвращает все события истории болезни
+        Параметры:
+        Тип события - опционально
+        """
+        # Выбор событий
+        event_type = kwargs.get('type',None)
+        if event_type:
+            # Задано событие определенного типа
+            events = HistoryEvents.query.join(Events, Events.id==HistoryEvents.event).\
+                            filter(and_(HistoryEvents.history==self.id,  Events.type==event_type)).all()
+        else:
+            events = HistoryEvents.query.filter(HistoryEvents.history==self.id).all()
+
+        items = []
+        for a in events:
+            event_item = Events.query.get(a.event)
+            item = {}
+            item['event'] = a
+            item['event_id'] = a.id
+            item['event_date'] = a.date_begin
+            item['event_date_begin'] = a.date_begin
+            item['event_date_end'] = a.date_end
+            doctor = Doctors.query.get(a.doctor)
+            item['doctor'] = doctor.fio
+            item['event_name'] = event_item.description
+            item['event_type'] = event_item.id
+            items.append(item)
+        return items
+
+
+
 # События в рамках истории болезни
 class HistoryEvents(db.Model):
     __tablename__='HistoryEvents'
@@ -418,6 +475,7 @@ class HistoryEvents(db.Model):
             item['indicator'] = i.indicator
             item['slice'] = i.slice
             item['description'] = indicator.description
+            item['date_value'] = i.date_value
             if i.num_value == None:
                 item['num_value'] = 0
             else:

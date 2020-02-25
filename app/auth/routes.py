@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, current_app
 from werkzeug.urls import url_parse
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
@@ -6,7 +6,7 @@ from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
 from app.models import Users, Clinics
 from datetime import datetime
-from app.email import send_password_reset_email
+from app.email import send_password_reset_email, send_email
 
 @bp.before_app_request
 def before_request():
@@ -27,6 +27,12 @@ def registration():
         user.clinic = Clinics.query.get(form.clinic.data).id
         db.session.add(user)
         db.session.commit()
+        # Отправить уведомление администратору
+        send_email(subject='Зарегистрирован новый пользователь',
+                   recipients=[current_app.config['MAIL_ADMIN']],
+                   template='admin/event_new_user',
+                   user=user)
+
         flash('You are registered!', category='info')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
@@ -59,7 +65,7 @@ def welcome():
 @bp.route('/logout')
 def logout():
     logout_user()
-    #flash('You are logged out!', category='info')
+    flash('You are logged out!', category='info')
     return redirect(url_for('main.index'))
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
